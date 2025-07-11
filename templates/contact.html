@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block title %}ติดต่อเรา - My Blog{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto py-12 px-4">
+  <div class="bg-white rounded shadow p-6 space-y-6">
+    <h1 class="text-3xl font-bold text-gray-800 mb-4">📬 ติดต่อเรา</h1>
+
+    <p class="text-gray-600">มีคำถาม ข้อเสนอแนะ หรือต้องการติดต่อทีมงาน? กรุณากรอกแบบฟอร์มด้านล่าง แล้วเราจะตอบกลับโดยเร็วที่สุด</p>
+
+    <form method="post" class="space-y-4">
+      {% csrf_token %}
+      {% if success %}
+        <div class="bg-green-100 text-green-700 p-3 rounded">✅ ส่งข้อความเรียบร้อยแล้ว ขอบคุณที่ติดต่อเรา!</div>
+      {% endif %}
+
+      <div>
+        <label class="block font-semibold text-gray-700">ชื่อของคุณ</label>
+        <input type="text" name="name" class="w-full border px-3 py-2 rounded" required>
+      </div>
+
+      <div>
+        <label class="block font-semibold text-gray-700">อีเมล</label>
+        <input type="email" name="email" class="w-full border px-3 py-2 rounded" required>
+      </div>
+      <div>
+        <label class="block font-semibold text-gray-700">หัวข้อ</label>
+        <input type="email" name="subject" class="w-full border px-3 py-2 rounded" required>
+      </div>
+      <div>
+        <label class="block font-semibold text-gray-700">ข้อความ</label>
+        <textarea name="message" rows="5" class="w-full border px-3 py-2 rounded" required></textarea>
+      </div>
+
+      <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">
+        ✉️ ส่งข้อความ
+      </button>
+    </form>
+  </div>
+</div>
+{% endblock %}

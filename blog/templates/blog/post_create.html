@@ -1,0 +1,163 @@
+{% extends 'base.html' %}
+
+{% block title %}เขียนบทความใหม่ - My Blog{% endblock %}
+
+{% block content %}
+  <div class="max-w-2xl mx-auto bg-white shadow rounded p-6">
+    <h1 class="text-2xl font-bold mb-4">✍️ เขียนบทความใหม่</h1>
+
+    <form id="post-form" method="post" class="space-y-4">
+      {% csrf_token %}
+      {{ form.non_field_errors }}
+
+      {% for field in form %}
+        {% if field.name == 'content' %}
+          <div>
+            <label for="editor" class="block font-semibold mb-1">{{ field.label }}</label>
+            <div id="editor" style="height: 400px;"></div>
+            <textarea id="content" name="content" hidden>{{ field.value|default_if_none:""|escape }}</textarea>
+          </div>
+
+        {% elif field.name == 'tags' %}
+          <div>
+            <label class="block font-semibold mb-1">Tags</label>
+            <input class="advance-options w-full border rounded px-3 py-2" id="tag-input" />
+            <input type="hidden" id="tags-hidden" name="tags" value="{{ field.value|join:',' }}">
+          </div>
+
+        {% else %}
+          <div>
+            <label for="{{ field.id_for_label }}" class="block font-semibold mb-1">{{ field.label }}</label>
+            {{ field }}
+            {% if field.help_text %}
+              <p class="text-sm text-gray-500">{{ field.help_text }}</p>
+            {% endif %}
+            {% for error in field.errors %}
+              <p class="text-sm text-red-500">{{ error }}</p>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endfor %}
+
+      <button type="submit" class="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600 transition">
+        💾 บันทึกการเปลี่ยนแปลง
+      </button>
+    </form>
+  </div>
+{% endblock %}
+
+{% block extra_scripts %}
+  <!-- Tagify -->
+  <script src="https://cdn.jsdelivr.net/npm/@yaireo/tagify"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@yaireo/tagify/dist/tagify.css" />
+
+  <!-- Toast UI Editor -->
+  <link rel="stylesheet" href="https://uicdn.toast.com/editor/latest/toastui-editor.min.css" />
+  <script src="https://uicdn.toast.com/editor/latest/toastui-editor-all.min.js"></script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const textarea = document.querySelector('#content');
+      const editorContainer = document.querySelector('#editor');
+      const form = document.querySelector('#post-form');
+      const hiddenTagField = document.querySelector('#tags-hidden');
+      const input = document.querySelector('input.advance-options');
+
+      // Toast UI Editor
+      const editor = new toastui.Editor({
+        el: editorContainer,
+        height: '400px',
+        initialEditType: 'markdown',
+        previewStyle: 'vertical',
+        initialValue: textarea.value || ''
+      });
+
+      // Init Tagify
+      const tagify = new Tagify(input, {
+        pattern: /^.{0,20}$/,
+        delimiters: ",| ",
+        trim: false,
+        keepInvalidTags: true,
+        editTags: {
+          clicks: 2,
+          keepInvalid: false
+        },
+        maxTags: 6,
+        blacklist: ["foo", "bar", "baz"],
+        whitelist: [
+          "temple", "detective", "passion", "routine", "gear", "doctor",
+          "policy", "study", "truth", "animal"
+        ],
+        transformTag: transformTag,
+        backspace: "edit",
+        placeholder: "ใส่แท็ก (สูงสุด 6 แท็ก)",
+        dropdown: {
+          enabled: 1,
+          fuzzySearch: false,
+          position: 'text',
+          caseSensitive: true,
+        },
+        templates: {
+          dropdownItemNoMatch: function(data) {
+            return `No suggestion found for: ${data.value}`;
+          }
+        }
+      });
+
+      // Load existing tags
+      let initialTags = [];
+      try {
+        initialTags = hiddenTagField.value
+          .split(',')
+          .map(t => t.trim())
+          .filter(t => t.length)
+          .map(t => ({ value: t }));
+      } catch (e) {}
+
+      tagify.addTags(initialTags);
+      console.log(initialTags)
+      updatePlaceholderByTagsCount();
+
+      tagify.on('change', updatePlaceholderByTagsCount);
+      tagify.on('add', e => console.log('added', e.detail));
+      tagify.on('invalid', e => console.log('invalid', e.detail));
+
+      let clickDebounce;
+      tagify.on('click', function(e) {
+        const { tag: tagElm, data: tagData } = e.detail;
+        clearTimeout(clickDebounce);
+        clickDebounce = setTimeout(() => {
+          tagData.color = getRandomColor();
+          tagData.style = "--tag-bg:" + tagData.color;
+          tagify.replaceTag(tagElm, tagData);
+        }, 200);
+      });
+
+      tagify.on('dblclick', () => clearTimeout(clickDebounce));
+
+      function updatePlaceholderByTagsCount() {
+        tagify.setPlaceholder(`${tagify.value.length || 'no'} tags added`);
+      }
+
+      function getRandomColor() {
+        const rand = (min, max) => min + Math.random() * (max - min);
+        return `hsl(${rand(1, 360) | 0}, ${rand(40, 70) | 0}%, ${rand(65, 72) | 0}%)`;
+      }
+
+      function transformTag(tagData) {
+        tagData.color = getRandomColor();
+        tagData.style = "--tag-bg:" + tagData.color;
+        if (tagData.value.toLowerCase() === 'shit')
+          tagData.value = 's✲✲t';
+      }
+
+      // Sync on submit
+      form.addEventListener('submit', function () {
+        textarea.value = editor.getMarkdown();
+        const tagValues = tagify.value.map(tag => tag.value);
+        hiddenTagField.value = JSON.stringify(tagify.value.map(tag => tag.value));
+      });
+    });
+  </script>
+{% endblock %}
+

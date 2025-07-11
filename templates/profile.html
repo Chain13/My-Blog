@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}โปรไฟล์ของ {{ user_profile.username }}{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+  <!-- Header -->
+  <div class="flex items-center space-x-4 mb-6">
+    {% if profile and profile.avatar %}
+      <img src="{{ profile.avatar.url }}" alt="Avatar"
+           class="w-16 h-16 rounded-full object-cover border" />
+    {% else %}
+      <div class="w-16 h-16 rounded-full flex items-center justify-center bg-gray-200 text-gray-600">
+        <!-- fallback icon -->
+        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+             class="lucide lucide-circle-user-icon">
+          <circle cx="12" cy="12" r="10"/>
+          <circle cx="12" cy="10" r="3"/>
+          <path d="M7 20.662V19a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v1.662"/>
+        </svg>
+      </div>
+    {% endif %}
+
+    <div>
+      <h1 class="text-xl font-bold">{{ user_profile.username }}</h1>
+      {% if profile and profile.bio %}
+        <p class="text-gray-600">{{ profile.bio }}</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Posts -->
+  <h2 class="text-lg font-semibold mb-4">บทความโดย {{ user_profile.username }}</h2>
+  {% with user_profile.post_set.all as posts %}
+    {% if posts %}
+      <ul class="space-y-3">
+        {% for post in posts %}
+          <li>
+            <a href="{% url 'post_detail' slug=post.slug %}" class="text-blue-600 hover:underline">
+              {{ post.title }}
+            </a>
+            <p class="text-sm text-gray-500">{{ post.published_date|date:"d M Y" }}</p>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="text-gray-500">ยังไม่มีบทความ</p>
+    {% endif %}
+  {% endwith %}
+</div>
+{% endblock %}
