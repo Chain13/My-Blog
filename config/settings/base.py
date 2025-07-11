@@ -48,6 +48,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # ต้องอยู่บนสุดก่อน Django static
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -165,3 +166,5 @@ CONTACT_RECEIVER_EMAIL = 'your@email.com'
 # CONTACT_RECEIVER_EMAIL = 'your-team@email.com'
 
 CSRF_TRUSTED_ORIGINS = ['https://*.ngrok-free.app']
+
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
